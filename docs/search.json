@@ -1,0 +1,37 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Titre",
+    "section": "",
+    "text": "Bonjour!"
+  },
+  {
+    "objectID": "regex.html",
+    "href": "regex.html",
+    "title": "Projet Aéroports",
+    "section": "",
+    "text": "Important\n\n\n\nPour télécharger le fichier: regex.qmd"
+  },
+  {
+    "objectID": "regex.html#à-la-découverte-des-expressions-régulières-avec-r-et-dautres-packages-au-passage",
+    "href": "regex.html#à-la-découverte-des-expressions-régulières-avec-r-et-dautres-packages-au-passage",
+    "title": "Projet Aéroports",
+    "section": "À la découverte des expressions régulières avec R (et d’autres packages au passage…)",
+    "text": "À la découverte des expressions régulières avec R (et d’autres packages au passage…)\nLes expressions régulières sont communément appelées regex ou regexp pour regular expressions en anglais. Selon Wikipédia, une expression régulière est “une chaîne de caractères, qui décrit, selon une syntaxe précise, un ensemble de chaînes de caractères possibles”. Si vous n’avez jamais entendu parlé des regex, il se peut que cette définition ne vous aide pas à comprendre le concept. Nous tenterons de démystifier le tout au cours de ces exercices.\nÀ titre de rappel, cet aide-mémoire vous sera drôlement utile!\nEn résumé, ces expressions permettent de décrire des motifs (patterns) à l’aide de formules “relativement simples” pour trouver, valider, extraire ou modifier du texte ou des nombres."
+  },
+  {
+    "objectID": "regex.html#mission-daujourdhui",
+    "href": "regex.html#mission-daujourdhui",
+    "title": "Projet Aéroports",
+    "section": "Mission d’aujourd’hui:",
+    "text": "Mission d’aujourd’hui:\nRécolter le plus d’information possible qui se trouve dans les tableaux de la page suivante: https://tc.canada.ca/fr/aviation/exploitation-aeroports-aerodromes/liste-aeroports-appartenant-transports-canada.\n\nlibrary(tidyverse)\n\n── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──\n✔ ggplot2 3.3.6      ✔ purrr   0.3.4 \n✔ tibble  3.1.8      ✔ dplyr   1.0.10\n✔ tidyr   1.2.0      ✔ stringr 1.4.1 \n✔ readr   2.1.2      ✔ forcats 0.5.2 \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\n\nlibrary(magrittr)\n\n\nAttaching package: 'magrittr'\n\nThe following object is masked from 'package:purrr':\n\n    set_names\n\nThe following object is masked from 'package:tidyr':\n\n    extract\n\nlibrary(rvest)\n\n\nAttaching package: 'rvest'\n\nThe following object is masked from 'package:readr':\n\n    guess_encoding\n\n\n\nURL <- \"https://tc.canada.ca/fr/aviation/exploitation-aeroports-aerodromes/liste-aeroports-appartenant-transports-canada\"\n\n\nDébut de solution en base R\n\nbase_raw_html <- read_html(x = URL)\nbase_html_table <- html_elements(x = base_raw_html, css = \"table\")\nbase_tables <- html_table(x = base_html_table)\n\n# base_table <- rbind(base_tables[[1]], base_tables[[2]], base_tables[[3]])\n\n⚠️ Erreur! Une colonne n’est pas nommée de façon identique, donc ne fonctionne pas… Corrigeons la situation\n\nnames(base_tables[[3]])[1] <- \"Province/Territoire\"\n\nbase_table <- rbind(base_tables[[1]], base_tables[[2]], base_tables[[3]])\n\nbase_table\n\n# A tibble: 44 × 3\n   `Province/Territoire`  Aéroport                `Exploité par`                \n   <chr>                  <chr>                   <chr>                         \n 1 \"Colombie-Britannique\" Penticton               \"Transports Canada\\n\\t\\t\\t#10…\n 2 \"\"                     Port Hardy              \"Transports Canada\\n\\t\\t\\tC.P…\n 3 \"\"                     Sandspit                \"Transports Canada\\n\\t\\t\\tC.P…\n 4 \"\"                     Havre de Victoria       \"Transports Canada\\n\\t\\t\\t12,…\n 5 \"Manitoba\"             Churchill               \"Transports Canada\\n\\t\\t\\tC.P…\n 6 \"Québec\"               Chevery                 \"Municipalité de la Côte-Nord…\n 7 \"\"                     Lourdes-de-Blanc-Sablon \"Transports Canada\\n\\t\\t\\tAir…\n 8 \"\"                     Sept-Îles               \"Transports Canada\\n\\t\\t\\t100…\n 9 \"\"                     Natashquan              \"Municipalité de Natashquan\\n…\n10 \"\"                     Eastmain River          \"Transports Canada\\n\\t\\t\\ta/s…\n# … with 34 more rows\n\n# Solution en Base R\nbase_table$`Province/Territoire` <- ifelse(test = is.na(base_table$`Province/Territoire`),\n                                  yes = base_table$Territoire, no = base_table$`Province/Territoire`)\nbase_table$Territoire <- NULL\n\nrm(list=(ls(pattern = \"base*\")))"
+  },
+  {
+    "objectID": "regex.html#solution-à-la-tidyverse",
+    "href": "regex.html#solution-à-la-tidyverse",
+    "title": "Projet Aéroports",
+    "section": "Solution à la Tidyverse",
+    "text": "Solution à la Tidyverse\n\nURL <- \"https://tc.canada.ca/fr/aviation/exploitation-aeroports-aerodromes/liste-aeroports-appartenant-transports-canada\"\n\n# raw_html <- read_html(x = URL)\n# html_table <- html_elements(x = raw_html, css = \"table\")\n# tables <- html_table(x = html_table)\n\npiped_table <- raw_html <- read_html(x = URL) %>%\n    html_elements(css = \"table\") %>%\n    html_table()\n\ntable <- dplyr::bind_rows(piped_table[[1]], \n                          piped_table[[2]], \n                          piped_table[[3]], \n                          .id = \"type\")\n\n# Corriger titres de colonnes\ntable <- table %>%\n    dplyr::rename(province_territoire = `Province/Territoire`,\n                  aeroport = `Aéroport`,\n                  exploitant = `Exploité par`,\n                  territoire = `Territoire`)\n\n# Pour remplir les cases vides de Province/Territoire\ntable[table == \"\"] <- NA\n# ou\ntable$province_territoire <- table$province_territoire %>% dplyr::na_if(y = \"\")\n\n# Prendre les données de la colonne Territoire et les transposer dans Province/Territoire\ntable$province_territoire <- table$province_territoire %>% dplyr::coalesce(table$province_territoire, table$territoire)\n\n# Compléter les provinces\ntable <- table %>%\n    tidyr::fill(province_territoire, .direction = \"down\")\n\n# Supprimer la dernière colonne qui est rendue inutile\ntable <- table %>%\n    dplyr::select(-territoire)\n\n\n# Extraire les codes d'aéroport \n# x <- table %>% mutate(code = str_extract(string = aeroport, pattern = \"[A-Z]{3}\"))\nx <- table %>% tidyr::extract(col = aeroport,\n                              into = \"code_aeroport\",\n                              regex = \"(Y[A-Z]{2})\",\n                              remove = FALSE)\n\ntable$aeroport <- table$aeroport %>% stringr::str_remove_all(pattern = \" \\\\(Y[A-Z]{2}\\\\)\")\n# pourrait aussi être, pour enlever tout ce qui est entre parenthèses\n# table$aeroport <- table$aeroport %>% stringr::str_remove_all(pattern = \" \\\\(.*\\\\)\")\n\n# Pour enlever espaces qui trainent\n# table$aeroport <- table$aeroport %>% stringr::str_squish()\n\n\n# Remplacer types\ntable <- table %>% mutate(type = recode(type, \n                                       \"1\" = \"Petit aéroport\",\n                                       \"2\" = \"Aéroport national\",\n                                       \"3\" = \"Aéroport national exploité par une administration territoriale\"))"
+  }
+]

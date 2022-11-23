@@ -1,0 +1,19 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Projet Aéroports"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Accueil
+      - regex.qmd # prend 1er titre si on ne spécifie pas text
+      # - href: autrepage.qmd
+      #   text: Autre page
+
+format:
+  html:
+    theme: darkly # cosmo
+    # css: styles.css
+    toc: true

@@ -1,0 +1,7 @@
+Bonjour!
+
+---
+title: Titre
+author: Moi
+date: Sys.Date()
+---
